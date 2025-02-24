@@ -7,7 +7,7 @@ function importarArquivosDoCloudStorage() {
   var nomeDaAba = 'NomeDaAba'; // Substitua pelo nome da aba onde os dados serão importados
 
   // Inicializa o serviço Storage
-  var storage = Storage.getService();
+  var storage = GoogleAppsScript.Storage.getService();
 
   // Obtém a planilha e a aba
   var planilha = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(nomeDaAba);
