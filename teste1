@@ -1,0 +1,62 @@
+function importarArquivosDoCloudStorage() {
+  // Configurações
+  var projetoId = 'SEU_PROJETO_ID'; // Substitua pelo ID do seu projeto no GCP
+  var bucketNome = 'NOME_DO_SEU_BUCKET'; // Substitua pelo nome do seu bucket
+  var pastaNoBucket = 'CAMINHO/DA/PASTA/'; // Substitua pelo caminho da pasta (opcional)
+  var nomeDaPlanilha = 'NomeDaSuaPlanilha'; // Substitua pelo nome da sua planilha
+  var nomeDaAba = 'NomeDaAba'; // Substitua pelo nome da aba onde os dados serão importados
+
+  // Inicializa o serviço Storage
+  var storage = Storage.getService();
+
+  // Obtém a planilha e a aba
+  var planilha = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(nomeDaAba);
+  planilha.clearContents(); // Limpa o conteúdo da aba antes de importar os dados
+
+  // Obtém os arquivos JSON do Cloud Storage
+  var arquivos = storage.Objects.list(bucketNome, { prefix: pastaNoBucket }).items;
+
+  if (!arquivos || arquivos.length === 0) {
+    Logger.log('Nenhum arquivo encontrado no bucket.');
+    return;
+  }
+
+  // Importa os dados de cada arquivo JSON
+  arquivos.forEach(function(arquivo) {
+    var nomeDoArquivo = arquivo.name;
+    var arquivoId = arquivo.id;
+
+    // Obtém o conteúdo do arquivo JSON
+    var arquivoBlob = storage.Objects.get(bucketNome, nomeDoArquivo);
+    var conteudo = arquivoBlob.getDataAsString();
+
+    try {
+      // Analisa o conteúdo JSON
+      var dadosJson = JSON.parse(conteudo);
+
+      // Extrai os dados relevantes do JSON
+      var dados = extrairDadosDoJson(dadosJson);
+
+      // Adiciona os dados à planilha
+      planilha.getRange(planilha.getLastRow() + 1, 1, dados.length, dados[0].length).setValues(dados);
+
+      Logger.log('Arquivo ' + nomeDoArquivo + ' importado com sucesso.');
+    } catch (e) {
+      Logger.log('Erro ao processar o arquivo ' + nomeDoArquivo + ': ' + e);
+    }
+  });
+}
+
+// Função para extrair dados relevantes do JSON (adapte conforme a estrutura do seu JSON)
+function extrairDadosDoJson(dadosJson) {
+  // Adapte esta função para extrair os dados que você precisa do seu JSON
+  // Exemplo: se o JSON for um array de objetos, você pode extrair os valores de cada objeto
+  if (Array.isArray(dadosJson)) {
+    return dadosJson.map(function(objeto) {
+      return [objeto.campo1, objeto.campo2, objeto.campo3]; // Substitua pelos nomes dos campos do seu JSON
+    });
+  } else {
+    // Se o JSON for um objeto único, você pode extrair os valores diretamente
+    return [[dadosJson.campo1, dadosJson.campo2, dadosJson.campo3]]; // Substitua pelos nomes dos campos do seu JSON
+  }
+}
